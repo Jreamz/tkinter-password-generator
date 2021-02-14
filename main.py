@@ -35,11 +35,12 @@ def passw_save():
     username = user_entry.get()
     password = passw_entry.get()
 
-    if len(uri) or len(username) or len(password) == 0:
+    if len(uri) == 0 or len(username) == 0 or len(password) == 0:
         messagebox.showerror(title="Error", message="Please fill out all entries.")
 
     else:
-        is_proceed = messagebox.askokcancel(title=uri, message=f"You have entered:\n Username: {username}\n Password: {password}\n Would you like to proceed?")
+        is_proceed = messagebox.askokcancel(title=uri, message=f"You have entered:\n Username: {username}\n Password: "
+                                                               f"{password}\n Would you like to proceed?")
 
         if is_proceed:
             with open("data.txt", "a") as data:
