@@ -2,7 +2,7 @@ from random import choice, randint, shuffle
 from tkinter import *
 from tkinter import messagebox
 import pyperclip
-
+import json
 
 # ---------------------------- PASSWORD GENERATOR ------------------------------- #
 
@@ -34,22 +34,58 @@ def passw_save():
     uri = uri_entry.get()
     username = user_entry.get()
     password = passw_entry.get()
+    new_data = {
+        uri: {
+            "username": username,
+            "password": password,
+        }
+    }
 
     if len(uri) == 0 or len(username) == 0 or len(password) == 0:
-        messagebox.showerror(title="Error", message="Please fill out all entries.")
-
+        messagebox.showinfo(title="Error", message="Please fill out all entries.")
     else:
-        is_proceed = messagebox.askokcancel(title=uri, message=f"You have entered:\n Username: {username}\n Password: "
-                                                               f"{password}\n Would you like to proceed?")
+        try:
+            with open("data.json", "r") as data_file:
+                # Reading old data
+                read_data = json.load(data_file)
+        except FileNotFoundError:
+            with open("data.json", "w") as new_file:
+                json.dump(new_data, new_file, indent=4)
+        else:
+            with open("data.json", "w") as data_file:
+                # Updating old data with new data
+                read_data.update(new_data)
+                # Saving the updated data
+                json.dump(read_data, data_file, indent=4)
+        finally:
+            uri_entry.delete(0, END)
+            user_entry.delete(0, END)
+            passw_entry.delete(0, END)
 
-        if is_proceed:
-            with open("data.txt", "a") as data:
-                data.write(f"{uri} | {username} | {password}\n")
-                uri_entry.delete(0, END)
-                user_entry.delete(0, END)
-                passw_entry.delete(0, END)
+# ---------------------------- SEARCH URI -----------------------------#
+
+def passw_search():
+
+    uri = uri_entry.get()
+
+    if len(uri) == 0:
+        messagebox.showinfo(title="Error", message="URI form is empty.")
+    else:
+        try:
+            with open("data.json") as data_file:
+                data = json.load(data_file)
+        except FileNotFoundError:
+            messagebox.showinfo(title="Error", message="No data file found.")
+        else:
+            if uri in data:
+                messagebox.showinfo(title=f"{data[uri]}",
+                                    message=f"\nUsername: {data[uri]['username']}"
+                                            f"\nPassword: {data[uri]['password']}")
+            else:
+                messagebox.showinfo(title="Error", message=f"No data for {uri} found.")
 
 # ---------------------------- UI SETUP ------------------------------- #
+
 
 window = Tk()
 window.title("Password Manager")
@@ -71,8 +107,8 @@ passw_label = Label(text="Password:")
 passw_label.grid(column=0, row=3)
 
 #Entries
-uri_entry = Entry(width=36)
-uri_entry.grid(column=1, row=1, columnspan=2)
+uri_entry = Entry(width=25)
+uri_entry.grid(column=1, row=1)
 uri_entry.focus()
 
 user_entry = Entry(width=36)
@@ -82,11 +118,14 @@ passw_entry = Entry(width=25, show="*")
 passw_entry.grid(column=1, row=3)
 
 # Button layout and config
+search_button = Button(text="  Search  ", command=passw_search)
+search_button.grid(column=2, row=1)
+
 passw_gen_button = Button(text="Generate", command=passw_gen)
 passw_gen_button.grid(column=2, row=3)
 
-add_passw_button = Button(text="Add", width=34, command=passw_save)
-add_passw_button.grid(column=1, row=4, columnspan=2)
+add_button = Button(text="Add", width=34, command=passw_save)
+add_button.grid(column=1, row=4, columnspan=2)
 
 
 window.mainloop()
